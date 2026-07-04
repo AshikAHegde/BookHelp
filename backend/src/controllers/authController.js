@@ -4,11 +4,17 @@ const jwt = require('jsonwebtoken');
 const asyncHandler = require('../middleware/asyncHandler');
 const { createUser, findUserByEmail } = require('../models/userModel');
 
+/**
+ * Builds a signed JWT for an authenticated user.
+ * @param {{ id: number, email: string, standard: number }} user Authenticated user data.
+ * @returns {string} Signed JWT string.
+ */
 const createToken = (user) => {
 	return jwt.sign(
 		{
 			id: user.id,
 			email: user.email,
+			standard: user.standard,
 		},
 		process.env.JWT_SECRET,
 		{
@@ -17,12 +23,25 @@ const createToken = (user) => {
 	);
 };
 
+/**
+ * Handles user registration.
+ * @param {import('express').Request} req Request body with name, email, password, and standard.
+ * @param {import('express').Response} res Response used to return the created user and token.
+ * @returns {Promise<void>} Sends a JSON response.
+ */
 const registerUser = asyncHandler(async (req, res) => {
-	const { name, email, password } = req.body;
+	const { name, email, password, standard } = req.body;
 
-	if (!name || !email || !password) {
+	if (!name || !email || !password || standard === undefined || standard === null) {
 		res.status(400);
-		throw new Error('Name, email, and password are required');
+		throw new Error('Name, email, password, and standard are required');
+	}
+
+	const parsedStandard = Number(standard);
+
+	if (Number.isNaN(parsedStandard)) {
+		res.status(400);
+		throw new Error('Standard must be a number');
 	}
 
 	const existingUser = await findUserByEmail(email);
@@ -33,12 +52,18 @@ const registerUser = asyncHandler(async (req, res) => {
 	}
 
 	const hashedPassword = await bcrypt.hash(password, 10);
-	const userId = await createUser({ name, email, password: hashedPassword });
+	const userId = await createUser({
+		name,
+		email,
+		password: hashedPassword,
+		standard: parsedStandard,
+	});
 
 	const user = {
 		id: userId,
 		name,
 		email,
+		standard: parsedStandard,
 	};
 
 	res.status(201).json({
@@ -49,6 +74,12 @@ const registerUser = asyncHandler(async (req, res) => {
 	});
 });
 
+/**
+ * Handles user login.
+ * @param {import('express').Request} req Request body with email and password.
+ * @param {import('express').Response} res Response used to return the authenticated user and token.
+ * @returns {Promise<void>} Sends a JSON response.
+ */
 const loginUser = asyncHandler(async (req, res) => {
 	const { email, password } = req.body;
 
@@ -75,6 +106,7 @@ const loginUser = asyncHandler(async (req, res) => {
 		id: user.id,
 		name: user.name,
 		email: user.email,
+		standard: user.standard,
 	};
 
 	res.json({

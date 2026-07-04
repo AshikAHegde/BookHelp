@@ -1,5 +1,12 @@
 const jwt = require('jsonwebtoken');
 
+/**
+ * Verifies the Bearer token and attaches the decoded user to req.user.
+ * @param {import('express').Request} req Incoming request containing the Authorization header.
+ * @param {import('express').Response} res Response object used to set unauthorized status codes.
+ * @param {import('express').NextFunction} next Express next function.
+ * @returns {void}
+ */
 const protect = (req, res, next) => {
 	const authHeader = req.headers.authorization;
 
@@ -16,6 +23,7 @@ const protect = (req, res, next) => {
 		req.user = {
 			id: decoded.id,
 			email: decoded.email,
+			standard: decoded.standard,
 		};
 
 		next();
