@@ -1,6 +1,7 @@
 const express = require('express');
 
 const authRoutes = require('./routes/authRoutes');
+const bookRoutes = require('./routes/bookRoutes');
 const { errorHandler, notFound } = require('./middleware/errorMiddleware');
 
 const app = express();
@@ -23,6 +24,7 @@ const healthCheck = (req, res) => {
 app.get('/health', healthCheck);
 
 app.use('/auth', authRoutes);
+app.use('/books', bookRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
