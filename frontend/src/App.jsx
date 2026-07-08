@@ -1,15 +1,19 @@
 import { useState } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useMatch } from 'react-router-dom'
 import { Footer } from './components/Footer.jsx'
 import { Navbar } from './components/Navbar.jsx'
 import { getAuthUser, hasAuthToken, setAuthToken } from './lib/authApi.js'
 import { AuthPage } from './pages/AuthPage.jsx'
+import { BookPage } from './pages/BookPage.jsx'
 import { HomePage } from './pages/HomePage.jsx'
 import './App.css'
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(hasAuthToken)
   const [user, setUser] = useState(getAuthUser)
+
+  // BookPage is full-screen — no shell around it
+  const onBookPage = useMatch('/book/:id')
 
   function handleAuthSuccess(userData) {
     setIsAuthenticated(true)
@@ -20,6 +24,18 @@ function App() {
     setAuthToken(null, null)
     setIsAuthenticated(false)
     setUser(null)
+  }
+
+  // Full-screen routes (no navbar / footer)
+  if (onBookPage) {
+    return (
+      <Routes>
+        <Route
+          path="/book/:id"
+          element={isAuthenticated ? <BookPage /> : <Navigate to="/login" replace />}
+        />
+      </Routes>
+    )
   }
 
   return (

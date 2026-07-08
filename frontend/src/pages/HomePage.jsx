@@ -122,15 +122,14 @@ function SubjectDashboard({ user }) {
               </div>
               <h3>{subject.subject}</h3>
               <p>Tap below to open the textbook PDF for this subject.</p>
-              <a
-                href={subject.pdf_url}
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                to={`/book/${subject.id}`}
+                state={{ pdf_url: subject.pdf_url, subject: subject.subject, standard: subject.standard }}
                 className="subject-action"
                 id={`open-subject-${subject.id}`}
               >
                 Open textbook →
-              </a>
+              </Link>
             </article>
           ))}
         </div>
