@@ -126,6 +126,16 @@ function getSources(matches) {
 		.filter((source) => Boolean(source.text));
 }
 
+function formatConversationHistory(history) {
+	if (!Array.isArray(history)) return '';
+
+	return history
+		.filter((item) => item && (item.role === 'user' || item.role === 'assistant') && typeof item.text === 'string')
+		.slice(-10)
+		.map((item) => `${item.role === 'user' ? 'User' : 'Assistant'}: ${item.text.trim()}`)
+		.join('\n');
+}
+
 async function askBookHelp(req) {
 	const queryText = extractQueryText(req);
 	if (!queryText) {
@@ -137,6 +147,7 @@ async function askBookHelp(req) {
 	const standard = req.body?.standard ?? decodeStandardFromAuth(req) ?? null;
 	const subject = req.body?.subject ?? req.headers['x-subject'] ?? null;
 	const topK = parseTopK(req.body?.topK ?? req.headers['x-topk'] ?? 5);
+	const conversationHistory = formatConversationHistory(req.body?.history);
 
 	const requiredEnv = ['PINECONE_API_KEY', 'PINECONE_INDEX_NAME', 'GEMINI_API_KEY'];
 	const missingEnv = requiredEnv.filter((key) => !process.env[key]);
@@ -176,7 +187,10 @@ async function askBookHelp(req) {
 		.slice(0, topK)
 		.map((source, index) => `Excerpt ${index + 1} (page ${source.page ?? 'N/A'}):\n${source.text}`)
 		.join('\n\n');
-	const answer = await generateWithGemini(queryText, context);
+	const answer = await generateWithGemini(
+		queryText,
+		[conversationHistory, context].filter(Boolean).join('\n\n')
+	);
 
 	return {
 		queryText,

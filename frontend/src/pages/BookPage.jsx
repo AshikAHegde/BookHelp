@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
+import { askQuestion } from '../lib/bookApi.js'
 
 const WELCOME_MSG = {
   id: 'welcome',
@@ -79,22 +80,39 @@ export function BookPage() {
     if (!text || sending) return
 
     const userMsg = { id: Date.now(), role: 'user', text }
-    setMessages((prev) => [...prev, userMsg])
+    const nextMessages = [...messages, userMsg]
+    setMessages(nextMessages)
     setInput('')
     setSending(true)
 
-    // --- Placeholder: replace this timeout with your real AI API call ---
-    setTimeout(() => {
+    try {
+      const result = await askQuestion({
+        query: text,
+        history: nextMessages,
+        standard: state?.standard,
+        subject: subjectName,
+        topK: 5,
+      })
+
       const botMsg = {
         id: Date.now() + 1,
         role: 'assistant',
-        text: `You asked: "${text}"\n\nAI tutor integration coming soon. This is where the answer will appear.`,
+        text: result.answer || 'I could not generate an answer.',
       }
+
       setMessages((prev) => [...prev, botMsg])
+    } catch (error) {
+      const botMsg = {
+        id: Date.now() + 1,
+        role: 'assistant',
+        text: error instanceof Error ? error.message : 'Something went wrong.',
+      }
+
+      setMessages((prev) => [...prev, botMsg])
+    } finally {
       setSending(false)
       inputRef.current?.focus()
-    }, 900)
-    // --- end placeholder ---
+    }
   }
 
   function handleKeyDown(e) {
