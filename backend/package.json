@@ -4,6 +4,7 @@
   "description": "Backend for AI Textbook Tutor",
   "main": "src/index.js",
   "scripts": {
+    "vec": "node vectorizing_pdfs/geo.js",
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -12,11 +13,16 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@langchain/community": "^1.1.29",
+    "@langchain/core": "^1.2.1",
+    "@langchain/textsplitters": "^1.0.1",
+    "@pinecone-database/pinecone": "^8.0.0",
     "bcrypt": "^6.0.0",
-    "dotenv": "^17.2.1",
+    "dotenv": "^17.4.2",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.3",
-    "mysql2": "^3.22.5"
+    "mysql2": "^3.22.5",
+    "pdf-parse": "^2.4.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

@@ -2,11 +2,13 @@ const express = require('express');
 
 const authRoutes = require('./routes/authRoutes');
 const bookRoutes = require('./routes/bookRoutes');
+const askRoutes = require('./routes/askRoutes');
 const { errorHandler, notFound } = require('./middleware/errorMiddleware');
 
 const app = express();
 
 app.use(express.json());
+app.use('/', askRoutes);
 
 /**
  * Returns a simple health check response.

@@ -9,3 +9,5 @@ backend/yarn-error.log*
 .DS_Store
 backend/.DS_Store
 backend/package-lock.json
+*.pdf
+test-xyd.abc
