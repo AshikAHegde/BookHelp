@@ -1,7 +1,6 @@
-import { useState } from 'react'
-import { Navigate, Route, Routes, useMatch } from 'react-router-dom'
-import { Footer } from './components/Footer.jsx'
-import { Navbar } from './components/Navbar.jsx'
+import { useEffect, useState } from 'react'
+import { Navigate, Route, Routes, useLocation, useMatch } from 'react-router-dom'
+import { DashboardShell } from './components/DashboardShell.jsx'
 import { getAuthUser, hasAuthToken, setAuthToken } from './lib/authApi.js'
 import { AuthPage } from './pages/AuthPage.jsx'
 import { BookPage } from './pages/BookPage.jsx'
@@ -11,9 +10,27 @@ import './App.css'
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(hasAuthToken)
   const [user, setUser] = useState(getAuthUser)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem('bookhelp_sidebar_collapsed') === 'true'
+    } catch {
+      return false
+    }
+  })
 
   // BookPage is full-screen — no shell around it
   const onBookPage = useMatch('/book/:id')
+  const location = useLocation()
+  const isAuthRoute = location.pathname === '/login' || location.pathname === '/register'
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('bookhelp_sidebar_collapsed', String(sidebarCollapsed))
+    } catch {
+      // ignore persistence issues
+    }
+  }, [sidebarCollapsed])
 
   function handleAuthSuccess(userData) {
     setIsAuthenticated(true)
@@ -24,6 +41,7 @@ function App() {
     setAuthToken(null, null)
     setIsAuthenticated(false)
     setUser(null)
+    setSearchQuery('')
   }
 
   // Full-screen routes (no navbar / footer)
@@ -38,13 +56,10 @@ function App() {
     )
   }
 
-  return (
-    <div className="app-shell">
-      <Navbar isAuthenticated={isAuthenticated} user={user} onLogout={handleLogout} />
-
-      <main className="app-main">
+  if (isAuthRoute) {
+    return (
+      <div className="auth-shell">
         <Routes>
-          <Route path="/" element={<HomePage isAuthenticated={isAuthenticated} user={user} />} />
           <Route
             path="/login"
             element={
@@ -65,12 +80,65 @@ function App() {
               )
             }
           />
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </div>
+    )
+  }
+
+  if (isAuthenticated) {
+    return (
+      <DashboardShell
+        user={user}
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        onSearchFocus={() => {
+          if (!searchQuery) {
+            setSearchQuery('')
+          }
+        }}
+        sidebarCollapsed={sidebarCollapsed}
+        onToggleSidebar={() => setSidebarCollapsed((value) => !value)}
+        onLogout={handleLogout}
+      >
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <HomePage
+                isAuthenticated={isAuthenticated}
+                user={user}
+                query={searchQuery}
+                onQueryChange={setSearchQuery}
+              />
+            }
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </main>
+      </DashboardShell>
+    )
+  }
 
-      <Footer />
-    </div>
+  return (
+    <Routes>
+      <Route
+        path="/"
+        element={<HomePage isAuthenticated={isAuthenticated} user={user} />}
+      />
+      <Route
+        path="/login"
+        element={
+          <AuthPage key="login" mode="login" onAuthSuccess={handleAuthSuccess} />
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <AuthPage key="register" mode="register" onAuthSuccess={handleAuthSuccess} />
+        }
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   )
 }
 

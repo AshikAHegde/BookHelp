@@ -1,15 +1,18 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig, loadEnv } from "vite";
+import react from "@vitejs/plugin-react";
 
-// https://vite.dev/config/
-export default defineConfig({
-  plugins: [react()],
-  server: {
-    proxy: {
-      '/auth': 'http://localhost:5000',
-      '/books': 'http://localhost:5000',
-      '/ask': 'http://localhost:5000',
-      '/health': 'http://localhost:5000',
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "");
+
+  return {
+    plugins: [react()],
+    server: {
+      proxy: {
+        "/auth": env.VITE_BACKEND_URL,
+        "/books": env.VITE_BACKEND_URL,
+        "/ask": env.VITE_BACKEND_URL,
+        "/health": env.VITE_BACKEND_URL,
+      },
     },
-  },
-})
+  };
+});

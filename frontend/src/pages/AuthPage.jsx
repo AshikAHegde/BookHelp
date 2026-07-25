@@ -1,3 +1,5 @@
+import { motion } from 'framer-motion'
+import { ArrowRight, ShieldCheck, Sparkles, BookOpenText } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { loginUser, registerUser, setAuthToken } from '../lib/authApi.js'
@@ -10,6 +12,24 @@ function getInitialFormState(mode) {
     standard: mode === 'register' ? '10' : '',
   }
 }
+
+const BENEFITS = [
+  {
+    title: 'Textbook grounded answers',
+    description: 'Keep every response tied to the actual book content.',
+    icon: BookOpenText,
+  },
+  {
+    title: 'Clean study flow',
+    description: 'Log in quickly and continue from your last session.',
+    icon: Sparkles,
+  },
+  {
+    title: 'Protected sessions',
+    description: 'Your account stays saved with token-based auth.',
+    icon: ShieldCheck,
+  },
+]
 
 export function AuthPage({ mode, onAuthSuccess }) {
   const navigate = useNavigate()
@@ -50,114 +70,152 @@ export function AuthPage({ mode, onAuthSuccess }) {
   }
 
   return (
-    <section className="page-section auth-page">
-      <div className="auth-card">
-        <div className="auth-header">
-          <div className="auth-badge">{isLoginMode ? '👋' : '🎒'}</div>
-          <span className="eyebrow">{isLoginMode ? 'Welcome back' : 'Join BookHelp'}</span>
-          <h2>{isLoginMode ? 'Login to continue' : 'Create your account'}</h2>
+    <section className="auth-page">
+      <div className="auth-frame">
+        <motion.div
+          className="auth-aside premium-surface"
+          initial={{ opacity: 0, x: -14 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.28, ease: 'easeOut' }}
+        >
+          <span className="eyebrow">{isLoginMode ? 'Welcome back' : 'Create your account'}</span>
+          <h1>{isLoginMode ? 'Continue your study session.' : 'Start with a cleaner study workspace.'}</h1>
           <p>
             {isLoginMode
-              ? 'Pick up right where you left off with your study sessions.'
-              : 'Set up your student profile and start learning today.'}
+              ? 'Open your subjects, keep the chat history compact, and pick up where you left off.'
+              : 'Register once and keep your class, books, and textbook questions in one premium dashboard.'}
           </p>
-        </div>
 
-        <form className="auth-form" onSubmit={handleSubmit} noValidate>
-          {!isLoginMode && (
+          <div className="auth-benefits">
+            {BENEFITS.map((item) => {
+              const Icon = item.icon
+              return (
+                <article key={item.title} className="auth-benefit">
+                  <span className="auth-benefit-icon">
+                    <Icon size={16} />
+                  </span>
+                  <div>
+                    <strong>{item.title}</strong>
+                    <p>{item.description}</p>
+                  </div>
+                </article>
+              )
+            })}
+          </div>
+        </motion.div>
+
+        <motion.div
+          className="auth-card premium-surface"
+          initial={{ opacity: 0, x: 14 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.28, ease: 'easeOut', delay: 0.05 }}
+        >
+          <div className="auth-card-header">
+            <span className="eyebrow">{isLoginMode ? 'Sign in' : 'Create account'}</span>
+            <h2>{isLoginMode ? 'Log in' : 'Register'}</h2>
+            <p>
+              {isLoginMode
+                ? 'Use your saved account to open the dashboard.'
+                : 'Enter the details for your class profile and create your account.'}
+            </p>
+          </div>
+
+          <form className="auth-form" onSubmit={handleSubmit} noValidate>
+            {!isLoginMode && (
+              <div className="form-field">
+                <label htmlFor="auth-name">Full name</label>
+                <input
+                  id="auth-name"
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Your full name"
+                  autoComplete="name"
+                  required
+                />
+              </div>
+            )}
+
             <div className="form-field">
-              <label htmlFor="auth-name">Full name</label>
+              <label htmlFor="auth-email">Email address</label>
               <input
-                id="auth-name"
-                type="text"
-                name="name"
-                value={formData.name}
+                id="auth-email"
+                type="email"
+                name="email"
+                value={formData.email}
                 onChange={handleChange}
-                placeholder="e.g. Arjun Sharma"
-                autoComplete="name"
+                placeholder="student@example.com"
+                autoComplete="email"
                 required
               />
             </div>
-          )}
 
-          <div className="form-field">
-            <label htmlFor="auth-email">Email address</label>
-            <input
-              id="auth-email"
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="student@example.com"
-              autoComplete="email"
-              required
-            />
-          </div>
-
-          <div className="form-field">
-            <label htmlFor="auth-password">Password</label>
-            <input
-              id="auth-password"
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder={isLoginMode ? 'Your password' : 'Choose a strong password'}
-              autoComplete={isLoginMode ? 'current-password' : 'new-password'}
-              required
-            />
-          </div>
-
-          {!isLoginMode && (
             <div className="form-field">
-              <label htmlFor="auth-standard">Class / Standard</label>
-              <select
-                id="auth-standard"
-                name="standard"
-                value={formData.standard}
+              <label htmlFor="auth-password">Password</label>
+              <input
+                id="auth-password"
+                type="password"
+                name="password"
+                value={formData.password}
                 onChange={handleChange}
+                placeholder={isLoginMode ? 'Your password' : 'Choose a strong password'}
+                autoComplete={isLoginMode ? 'current-password' : 'new-password'}
                 required
-              >
-                {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
-                  <option key={n} value={String(n)}>
-                    Class {n}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
-          )}
 
-          {errorMessage && (
-            <p className="status status-error" role="alert">
-              {errorMessage}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            className="button button-primary auth-submit"
-            disabled={isSubmitting}
-            id="auth-submit-btn"
-          >
-            {isSubmitting ? (
-              <span className="btn-loading">
-                <span className="spinner" />
-                Please wait…
-              </span>
-            ) : isLoginMode ? (
-              'Login →'
-            ) : (
-              'Create account →'
+            {!isLoginMode && (
+              <div className="form-field">
+                <label htmlFor="auth-standard">Class / Standard</label>
+                <select
+                  id="auth-standard"
+                  name="standard"
+                  value={formData.standard}
+                  onChange={handleChange}
+                  required
+                >
+                  {Array.from({ length: 12 }, (_, index) => index + 1).map((value) => (
+                    <option key={value} value={String(value)}>
+                      Class {value}
+                    </option>
+                  ))}
+                </select>
+              </div>
             )}
-          </button>
-        </form>
 
-        <div className="auth-switch">
-          <span>{isLoginMode ? "Don't have an account?" : 'Already have an account?'}</span>
-          <Link to={isLoginMode ? '/register' : '/login'} id="auth-switch-link">
-            {isLoginMode ? 'Register now' : 'Login instead'}
-          </Link>
-        </div>
+            {errorMessage && (
+              <p className="status status-error" role="alert">
+                {errorMessage}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              className="button button-primary auth-submit"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <span className="button-loading">
+                  <span className="spinner" />
+                  Please wait
+                </span>
+              ) : (
+                <>
+                  {isLoginMode ? 'Log in' : 'Create account'}
+                  <ArrowRight size={16} />
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className="auth-switch">
+            <span>{isLoginMode ? "Don't have an account?" : 'Already have an account?'}</span>
+            <Link to={isLoginMode ? '/register' : '/login'}>
+              {isLoginMode ? 'Register now' : 'Log in instead'}
+            </Link>
+          </div>
+        </motion.div>
       </div>
     </section>
   )
