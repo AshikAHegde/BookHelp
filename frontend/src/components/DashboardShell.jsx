@@ -12,9 +12,11 @@ import {
   SlidersHorizontal,
   Sparkles,
   UserRound,
+  X,
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { updateUserProfileApi, setAuthToken } from '../lib/authApi.js'
 
 const NAV_ITEMS = [
   { id: 'overview', label: 'Overview', icon: LayoutGrid, target: 'top' },
@@ -32,6 +34,7 @@ function getInitials(name) {
 
 export function DashboardShell({
   user,
+  onUpdateUser,
   searchValue,
   onSearchChange,
   onSearchFocus,
@@ -45,7 +48,59 @@ export function DashboardShell({
   const [activeNav, setActiveNav] = useState('overview')
   const [showNotifications, setShowNotifications] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [showProfileModal, setShowProfileModal] = useState(false)
+  const [profileForm, setProfileForm] = useState({
+    name: '',
+    email: '',
+    password: '',
+    standard: '10',
+  })
+  const [profileError, setProfileError] = useState('')
+  const [profileSuccess, setProfileSuccess] = useState('')
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false)
   const shellRef = useRef(null)
+
+  useEffect(() => {
+    if (showProfileModal && user) {
+      setProfileForm({
+        name: user.name || '',
+        email: user.email || '',
+        password: '',
+        standard: String(user.standard || '10'),
+      })
+      setProfileError('')
+      setProfileSuccess('')
+    }
+  }, [showProfileModal, user])
+
+  async function handleProfileSubmit(event) {
+    event.preventDefault()
+    setIsUpdatingProfile(true)
+    setProfileError('')
+    setProfileSuccess('')
+
+    try {
+      const payload = await updateUserProfileApi({
+        name: profileForm.name.trim(),
+        email: profileForm.email.trim(),
+        password: profileForm.password || undefined,
+        standard: Number(profileForm.standard),
+      })
+
+      setAuthToken(payload.token, payload.user)
+      if (onUpdateUser) {
+        onUpdateUser(payload.user)
+      }
+      setProfileSuccess('Profile updated successfully!')
+      setTimeout(() => {
+        setShowProfileModal(false)
+      }, 1200)
+    } catch (error) {
+      setProfileError(error instanceof Error ? error.message : 'Failed to update profile')
+    } finally {
+      setIsUpdatingProfile(false)
+    }
+  }
 
   useEffect(() => {
     setActiveNav('overview')
@@ -239,6 +294,17 @@ export function DashboardShell({
                         <SlidersHorizontal size={16} />
                         <span>{sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}</span>
                       </button>
+                      <button
+                        type="button"
+                        className="popover-action"
+                        onClick={() => {
+                          setShowProfileModal(true)
+                          setShowSettings(false)
+                        }}
+                      >
+                        <UserRound size={16} />
+                        <span>Edit profile</span>
+                      </button>
                       <button type="button" className="popover-action" onClick={onLogout}>
                         <LogOut size={16} />
                         <span>Sign out</span>
@@ -264,6 +330,134 @@ export function DashboardShell({
 
         <main className="dashboard-content">{children}</main>
       </div>
+
+      <AnimatePresence>
+        {showProfileModal && (
+          <div className="profile-modal-overlay">
+            <motion.div
+              className="popover-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowProfileModal(false)}
+              style={{ zIndex: 9998 }}
+            />
+            <motion.div
+              className="profile-modal-card premium-surface"
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ duration: 0.22, ease: 'easeOut' }}
+            >
+              <div className="profile-modal-header">
+                <div>
+                  <span className="eyebrow">Settings</span>
+                  <h2>Edit Profile</h2>
+                </div>
+                <button
+                  type="button"
+                  className="icon-button modal-close-btn"
+                  onClick={() => setShowProfileModal(false)}
+                  aria-label="Close modal"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form className="profile-modal-form" onSubmit={handleProfileSubmit} noValidate>
+                <div className="form-field">
+                  <label htmlFor="profile-name">Full name</label>
+                  <input
+                    id="profile-name"
+                    type="text"
+                    value={profileForm.name}
+                    onChange={(e) => setProfileForm(p => ({ ...p, name: e.target.value }))}
+                    placeholder="Your name"
+                    required
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label htmlFor="profile-email">Email address</label>
+                  <input
+                    id="profile-email"
+                    type="email"
+                    value={profileForm.email}
+                    onChange={(e) => setProfileForm(p => ({ ...p, email: e.target.value }))}
+                    placeholder="student@example.com"
+                    required
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label htmlFor="profile-password">New password</label>
+                  <input
+                    id="profile-password"
+                    type="password"
+                    value={profileForm.password}
+                    onChange={(e) => setProfileForm(p => ({ ...p, password: e.target.value }))}
+                    placeholder="Leave blank to keep current"
+                    autoComplete="new-password"
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label htmlFor="profile-standard">Class / Standard</label>
+                  <select
+                    id="profile-standard"
+                    value={profileForm.standard}
+                    onChange={(e) => setProfileForm(p => ({ ...p, standard: e.target.value }))}
+                    required
+                  >
+                    {Array.from({ length: 12 }, (_, index) => index + 1).map((value) => (
+                      <option key={value} value={String(value)}>
+                        Class {value}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {profileError && (
+                  <p className="status status-error" role="alert">
+                    {profileError}
+                  </p>
+                )}
+
+                {profileSuccess && (
+                  <p className="status status-success" role="alert">
+                    {profileSuccess}
+                  </p>
+                )}
+
+                <div className="profile-modal-actions">
+                  <button
+                    type="button"
+                    className="button button-ghost"
+                    onClick={() => setShowProfileModal(false)}
+                    disabled={isUpdatingProfile}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="button button-primary"
+                    disabled={isUpdatingProfile}
+                  >
+                    {isUpdatingProfile ? (
+                      <span className="button-loading">
+                        <span className="spinner" />
+                        Saving
+                      </span>
+                    ) : (
+                      'Save changes'
+                    )}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

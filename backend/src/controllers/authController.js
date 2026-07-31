@@ -2,7 +2,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 const asyncHandler = require('../middleware/asyncHandler');
-const { createUser, findUserByEmail } = require('../models/userModel');
+const { createUser, findUserByEmail, findUserById, updateUser } = require('../models/userModel');
 
 /**
  * Builds a signed JWT for an authenticated user.
@@ -117,7 +117,71 @@ const loginUser = asyncHandler(async (req, res) => {
 	});
 });
 
+/**
+ * Handles user profile update.
+ * @param {import('express').Request} req Request containing name, email, standard, and optional password.
+ * @param {import('express').Response} res Response used to return updated user details and a new token.
+ * @returns {Promise<void>} Sends a JSON response.
+ */
+const updateUserProfile = asyncHandler(async (req, res) => {
+	const userId = req.user.id;
+	const { name, email, password, standard } = req.body;
+
+	if (!name || !email || standard === undefined || standard === null) {
+		res.status(400);
+		throw new Error('Name, email, and standard are required');
+	}
+
+	const parsedStandard = Number(standard);
+	if (Number.isNaN(parsedStandard)) {
+		res.status(400);
+		throw new Error('Standard must be a number');
+	}
+
+	const user = await findUserById(userId);
+	if (!user) {
+		res.status(404);
+		throw new Error('User not found');
+	}
+
+	// If email is changing, check if new email is already in use
+	if (email.toLowerCase() !== user.email.toLowerCase()) {
+		const emailExists = await findUserByEmail(email);
+		if (emailExists) {
+			res.status(409);
+			throw new Error('Email is already in use');
+		}
+	}
+
+	let hashedPassword;
+	if (password && password.trim() !== '') {
+		hashedPassword = await bcrypt.hash(password, 10);
+	}
+
+	await updateUser(userId, {
+		name,
+		email,
+		password: hashedPassword,
+		standard: parsedStandard,
+	});
+
+	const updatedUser = {
+		id: userId,
+		name,
+		email,
+		standard: parsedStandard,
+	};
+
+	res.json({
+		success: true,
+		message: 'Profile updated successfully',
+		user: updatedUser,
+		token: createToken(updatedUser),
+	});
+});
+
 module.exports = {
 	registerUser,
 	loginUser,
+	updateUserProfile,
 };

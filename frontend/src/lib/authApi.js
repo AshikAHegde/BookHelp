@@ -146,3 +146,15 @@ export function setAuthToken(token, user = null) {
 export function hasAuthToken() {
   return Boolean(getAuthToken())
 }
+
+/**
+ * Sends a profile update request to the backend.
+ * @param {{ name: string, email: string, password?: string, standard: number }} details Profile updates.
+ * @returns {Promise<{ success: boolean, message: string, user: object, token: string }>}
+ */
+export function updateUserProfileApi(details) {
+  return fetchJson('/auth/profile', {
+    method: 'PUT',
+    body: JSON.stringify(details),
+  })
+}

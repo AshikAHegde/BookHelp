@@ -90,6 +90,7 @@ function App() {
     return (
       <DashboardShell
         user={user}
+        onUpdateUser={setUser}
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
         onSearchFocus={() => {
