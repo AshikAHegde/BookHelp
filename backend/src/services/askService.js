@@ -110,6 +110,86 @@ async function generateWithGemini(question, context) {
 	).trim();
 }
 
+async function generateWithFallback(question, context) {
+	const systemPrompt =
+		'You are BookHelp Tutor. Answer the user using ONLY the provided textbook excerpts in the Context. If the context is insufficient, say you cannot find the answer in the provided excerpts and ask a clarifying question. Keep the answer clear and in simple language.';
+	const userContent = `Context:\n${context}\n\nUser question: ${question}`;
+
+	// 1. Try official Mistral AI API if MISTRAL_API_KEY is available
+	if (process.env.MISTRAL_API_KEY) {
+		try {
+			const model = process.env.MISTRAL_MODEL || 'mistral-small-latest';
+			const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${process.env.MISTRAL_API_KEY}`,
+				},
+				body: JSON.stringify({
+					model,
+					messages: [
+						{ role: 'system', content: systemPrompt },
+						{ role: 'user', content: userContent },
+					],
+					temperature: 0.3,
+				}),
+			});
+
+			if (response.ok) {
+				const data = await response.json();
+				return data?.choices?.[0]?.message?.content?.trim() || '';
+			}
+			console.warn(`Mistral API returned ${response.status}, attempting Groq fallback...`);
+		} catch (err) {
+			console.warn('Mistral API error:', err.message);
+		}
+	}
+
+	// 2. Try Groq API (which hosts Llama, Mixtral, etc.) if GROQ_API_KEY is available
+	if (process.env.GROQ_API_KEY) {
+		const model = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
+		const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+			},
+			body: JSON.stringify({
+				model,
+				messages: [
+					{ role: 'system', content: systemPrompt },
+					{ role: 'user', content: userContent },
+				],
+				temperature: 0.3,
+			}),
+		});
+
+		if (!response.ok) {
+			const errorText = await response.text();
+			throw new Error(`Groq API fallback failed (${response.status}): ${errorText}`);
+		}
+
+		const data = await response.json();
+		return data?.choices?.[0]?.message?.content?.trim() || '';
+	}
+
+	throw new Error('No fallback API key (MISTRAL_API_KEY or GROQ_API_KEY) is configured.');
+}
+
+async function generateAnswer(question, context) {
+	try {
+		return await generateWithGemini(question, context);
+	} catch (geminiError) {
+		console.warn('Gemini generation failed, trying fallback provider:', geminiError.message);
+		try {
+			return await generateWithFallback(question, context);
+		} catch (fallbackError) {
+			console.error('Fallback generation also failed:', fallbackError.message);
+			throw geminiError;
+		}
+	}
+}
+
 function parseTopK(value) {
 	const parsed = Number(value);
 	return Number.isFinite(parsed) ? Math.max(1, Math.floor(parsed)) : 5;
@@ -187,7 +267,7 @@ async function askBookHelp(req) {
 		.slice(0, topK)
 		.map((source, index) => `Excerpt ${index + 1} (page ${source.page ?? 'N/A'}):\n${source.text}`)
 		.join('\n\n');
-	const answer = await generateWithGemini(
+	const answer = await generateAnswer(
 		queryText,
 		[conversationHistory, context].filter(Boolean).join('\n\n')
 	);

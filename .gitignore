@@ -1,7 +1,10 @@
 backend/node_modules/
 backend/.env
+frontend/.env
 backend/.env.*
+frontend/.env.*
 !backend/.env.example
+!frontend/.env.example
 backend/*.log
 backend/npm-debug.log*
 backend/yarn-debug.log*
