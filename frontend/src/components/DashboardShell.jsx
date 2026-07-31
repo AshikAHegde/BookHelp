@@ -290,10 +290,6 @@ export function DashboardShell({
                       transition={{ duration: 0.16 }}
                       onClick={(event) => event.stopPropagation()}
                     >
-                      <button type="button" className="popover-action popover-collapse-action" onClick={onToggleSidebar}>
-                        <SlidersHorizontal size={16} />
-                        <span>{sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}</span>
-                      </button>
                       <button
                         type="button"
                         className="popover-action"
