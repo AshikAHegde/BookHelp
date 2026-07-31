@@ -6,8 +6,6 @@
 .sidebar-card,
 .landing-preview,
 .empty-state,
-.chat-bubble .bubble-card,
-.chat-bubble .bubble-flow,
 .source-card,
 .book-pane,
 .topbar-popover {
@@ -370,6 +368,8 @@
 }
 
 .topbar-search {
+  min-width: 0;
+  max-width: 480px;
   min-height: 48px;
   padding: 0 16px;
   border: 1px solid var(--border);
@@ -688,7 +688,7 @@
 
 .subject-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
   gap: 16px;
 }
 
@@ -936,35 +936,58 @@
 
 .book-topbar {
   max-width: 1480px;
-  margin: 0 auto 14px;
-  padding: 16px 18px;
+  margin: 0 auto 10px;
+  padding: 7px 18px;
   border: 1px solid var(--border);
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.88);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(18px);
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 16px;
-  box-shadow: var(--shadow-soft);
+  box-shadow: 0 2px 16px rgba(17, 24, 39, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.book-topbar::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+  border-radius: 22px 0 0 22px;
 }
 
 .book-back-btn {
   color: var(--text);
+  border-color: var(--border);
+  background: #fff;
+}
+
+.book-back-btn:hover {
+  background: color-mix(in srgb, var(--accent) 6%, white);
+  border-color: color-mix(in srgb, var(--accent) 20%, var(--border));
 }
 
 .book-topbar-copy {
   min-width: 0;
+  padding-left: 4px;
 }
 
 .book-topbar-copy h1 {
-  margin: 4px 0 0;
+  margin: 2px 0 0;
   font-size: 1.1rem;
   line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
 .book-topbar-copy p {
-  margin: 4px 0 0;
+  margin: 3px 0 0;
+  font-size: 0.82rem;
 }
 
 .book-mobile-tabs {
@@ -1112,11 +1135,13 @@
 .chat-bubble-user {
   flex-direction: row-reverse;
   justify-content: flex-start;
+  align-items: center;
   margin-left: auto;
 }
 
 .chat-bubble-assistant {
   justify-content: flex-start;
+  align-items: flex-start;
   margin-right: auto;
 }
 
@@ -1133,26 +1158,29 @@
 }
 
 .message-avatar-user {
-  background: color-mix(in srgb, var(--text) 5%, white);
-  color: var(--text);
-}
-
-.bubble-card,
-.bubble-flow {
-  max-width: min(680px, calc(100% - 48px));
-  padding: 16px;
-  width: fit-content;
+  background: var(--text);
+  color: #ffffff;
 }
 
 .bubble-card {
-  background: var(--text);
-  color: #fff;
-  border-radius: 18px 18px 6px 18px;
+  max-width: min(640px, 82%);
+  padding: 10px 16px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--accent) 10%, white);
+  color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
 
 .bubble-flow {
+  max-width: min(720px, calc(100% - 48px));
+  padding: 2px 0 8px 0;
   display: grid;
   gap: 12px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 .bubble-flow p,
@@ -1167,10 +1195,24 @@
 .chat-bubble-user .bubble-card {
   margin-left: auto;
   margin-right: 0;
-  background: color-mix(in srgb, var(--accent) 10%, white);
-  color: var(--text);
-  border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--border));
-  border-radius: 18px 18px 18px 6px;
+  background: color-mix(in srgb, var(--accent) 7%, white);
+  border: 1px solid color-mix(in srgb, var(--accent) 15%, var(--border));
+  border-radius: 14px;
+}
+
+.chat-bubble-user .bubble-card,
+.chat-bubble-user .bubble-card p,
+.chat-bubble-user .bubble-card span,
+.chat-bubble-user .bubble-card li {
+  color: #000000 !important;
+  font-weight: 500;
+}
+
+.chat-bubble-assistant .bubble-flow,
+.chat-bubble-assistant .bubble-flow p,
+.chat-bubble-assistant .bubble-flow li,
+.chat-bubble-assistant .bubble-flow span {
+  color: var(--text) !important;
 }
 
 .chat-bubble-user .message-avatar {
@@ -1223,26 +1265,6 @@
   border-radius: 999px;
   background: color-mix(in srgb, var(--text) 7%, white);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  color: var(--text);
-}
-
-.chat-bubble .bubble-card,
-.chat-bubble .bubble-flow {
-  color: var(--text);
-}
-
-.chat-bubble .bubble-card p,
-.chat-bubble .bubble-card li,
-.chat-bubble .bubble-card h1,
-.chat-bubble .bubble-card h2,
-.chat-bubble .bubble-card h3,
-.chat-bubble .bubble-card a,
-.chat-bubble .bubble-flow p,
-.chat-bubble .bubble-flow li,
-.chat-bubble .bubble-flow h1,
-.chat-bubble .bubble-flow h2,
-.chat-bubble .bubble-flow h3,
-.chat-bubble .bubble-flow a {
   color: var(--text);
 }
 
@@ -1421,7 +1443,21 @@
   }
 
   .app-sidebar {
-    display: none;
+    display: none !important;
+  }
+
+  .app-topbar {
+    margin: 12px 12px 0;
+    border-radius: 18px;
+  }
+
+  .topbar-search {
+    max-width: none;
+    width: 100%;
+  }
+
+  .dashboard-content {
+    padding: 20px 20px 36px;
   }
 
   .dashboard-grid {
@@ -1429,6 +1465,11 @@
   }
 
   .dashboard-sidebar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .subject-grid,
+  .subject-grid-loading {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -1444,28 +1485,83 @@
   .book-divider {
     display: none;
   }
+
+  .section-card {
+    padding: 18px;
+  }
+
+  .page-hero-copy h1 {
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+  }
+
+  .subject-card {
+    min-height: 180px;
+    padding: 16px;
+  }
 }
 
-@media (max-width: 860px) {
+@media (max-width: 900px) {
   .landing-shell,
-  .auth-page,
-  .book-page {
+  .auth-page {
     padding: 16px;
+  }
+
+  .book-page {
+    padding: 10px 10px 12px;
   }
 
   .dashboard-content {
     padding: 16px 16px 32px;
   }
 
-  .app-topbar,
-  .book-topbar {
+  .app-topbar {
     margin-inline: 0;
     border-radius: 20px;
   }
 
+  .book-topbar {
+    margin-inline: 0;
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .book-topbar-copy .eyebrow,
+  .book-topbar-copy p {
+    display: none;
+  }
+
+  .book-topbar-copy h1 {
+    font-size: 0.95rem;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .book-back-btn {
+    min-height: 34px;
+    padding: 0 10px;
+    font-size: 0.82rem;
+    border-radius: 10px;
+    flex: 0 0 auto;
+  }
+
+  .book-topbar a.button-secondary,
+  .book-topbar .book-topbar-chip {
+    min-height: 34px;
+    padding: 0 10px;
+    font-size: 0.82rem;
+    border-radius: 10px;
+    flex: 0 0 auto;
+    width: auto;
+  }
+
   .page-hero,
-  .book-topbar,
-  .chat-header,
   .section-heading {
     flex-direction: column;
     align-items: flex-start;
@@ -1482,6 +1578,14 @@
   .book-mobile-tabs {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-bottom: 8px;
+    gap: 8px;
+  }
+
+  .book-tab-button {
+    min-height: 36px;
+    border-radius: 12px;
+    font-size: 0.84rem;
   }
 
   .book-book-pane,
@@ -1494,15 +1598,72 @@
     display: flex;
   }
 
-  .book-pane-header,
-  .chat-header,
+  .chat-header {
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .chat-header-copy .eyebrow,
+  .chat-header-copy p {
+    display: none;
+  }
+
+  .chat-header-copy h2 {
+    font-size: 0.95rem;
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .chat-header-actions {
+    width: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .chat-header-actions .button {
+    min-height: 32px;
+    padding: 0 10px;
+    font-size: 0.8rem;
+    border-radius: 10px;
+    width: auto;
+  }
+
+  .chat-source-count {
+    min-height: 28px;
+    padding: 0 8px;
+    font-size: 0.75rem;
+  }
+
+  .book-pane-header {
+    padding: 10px 14px 0;
+  }
+
+  .book-pane-header .eyebrow {
+    display: none;
+  }
+
+  .book-pane-header h2 {
+    font-size: 0.95rem;
+    margin: 0;
+  }
+
+  .book-workspace {
+    min-height: calc(100vh - 120px);
+  }
+
   .chat-input-form {
-    padding-inline: 16px;
+    padding-inline: 12px;
+    padding-bottom: 12px;
   }
 
   .chat-messages,
   .book-reader-shell {
-    padding-inline: 16px;
+    padding-inline: 12px;
   }
 
   .bubble-card,
@@ -1577,9 +1738,12 @@
   }
 
   .hero-actions,
-  .page-hero-actions,
-  .chat-header-actions {
+  .page-hero-actions {
     width: 100%;
+  }
+
+  .chat-header-actions {
+    width: auto;
   }
 
   .button,
@@ -1588,6 +1752,11 @@
   .chat-input-shell,
   .book-tab-button {
     width: 100%;
+  }
+
+  .chat-header-actions .button,
+  .book-topbar .button {
+    width: auto;
   }
 
   .topbar-popover {

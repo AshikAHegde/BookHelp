@@ -460,21 +460,6 @@ export function BookPage() {
             isFreshChat ? 'is-fresh' : ''
           }`}
         >
-          <div className="chat-header">
-            <div className="chat-header-copy">
-              <span className="eyebrow">AI assistant</span>
-              <h2>Ask anything about this chapter</h2>
-              <p>Answers stay tied to the book excerpts and surface citations below each response.</p>
-            </div>
-
-            <div className="chat-header-actions">
-              <button type="button" className="button button-secondary" onClick={handleRegenerate} disabled={sending}>
-                <RefreshCcw size={16} />
-                <span>Regenerate</span>
-              </button>
-              <span className="chat-source-count">{totalSources} sources</span>
-            </div>
-          </div>
 
           <div className="chat-messages" ref={chatScrollRef} onScroll={handleScroll} aria-live="polite">
             {messages.map((message) => (
